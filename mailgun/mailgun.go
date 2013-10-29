@@ -1,55 +1,56 @@
 package mailgun
 
 import (
-    "fmt"
-    "net/http"
-    "strings"
-    "io/ioutil"
-    "net/url"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
-var ApiEndpoint, ApiKey string
-
-type Message struct {
-    FromName string
-    FromAddress string
-    ToAddress string
-    Subject string
-    Body string
+type Client struct {
+	ApiKey   string
+	Domain   string
+	Hostname string // this is mostly for testing purposes
 }
 
-func (m Message) From() string {
-    return fmt.Sprintf("%s <%s>", m.FromName, m.FromAddress)
+type MailgunMessage interface {
+	IsValid() bool
+	GetRequest(Client) (*http.Request)
+	Endpoint() string
 }
 
-func Send(message Message) error {
-    client := &http.Client{}
+func NewClient(apikey, domain string) *Client {
+	return &Client{ApiKey: apikey, Domain: domain, Hostname: "https://api.mailgun.net"}
+}
 
-    values := make(url.Values)
-    values.Set("from", message.From())
-    values.Set("to", message.ToAddress)
-    values.Set("subject", message.Subject)
-    values.Set("text", message.Body)
+func (mailgun Client) Endpoint(m MailgunMessage) string {
+	return fmt.Sprintf("%s/v2/%s/%s", mailgun.Hostname, mailgun.Domain, m.Endpoint())
+}
 
-    request, _ := http.NewRequest("POST", ApiEndpoint, strings.NewReader(values.Encode()))
-    request.Header.Set("content-type", "application/x-www-form-urlencoded")
-    request.SetBasicAuth("api", ApiKey)
+func (mailgun Client) Send(message MailgunMessage) (result string, err error) {
+	client := &http.Client{}
 
-    response, e1 := client.Do(request)
-    if e1 != nil {
-        fmt.Println("Failed to send request")
-        fmt.Println(e1)
-        return e1
-    }
-    defer response.Body.Close()
+	if !message.IsValid() {
+		log.Print("Mailgun.Send did not receive a valid Message object!")
+		return
+	}
 
-    body, e2 := ioutil.ReadAll(response.Body)
-    if e2 != nil {
-        fmt.Println("Failed to read response")
-        fmt.Println(e2)
-        return e2
-    }
+	request := message.GetRequest(mailgun)
+	request.SetBasicAuth("api", mailgun.ApiKey)
+	request.Close = true
 
-    fmt.Println(string(body))
-    return nil
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatal("Failed to send request: ", err)
+		return
+	}
+	defer response.Body.Close()
+
+	body_bytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal("Failed to read response: ", err)
+		return
+	}
+
+	return string(body_bytes), nil
 }
