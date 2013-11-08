@@ -9,11 +9,14 @@ import (
 	"net/http"
 )
 
+// MimeMessage is the structure for communicating a MIME message to Mailgun.
 type MimeMessage struct {
 	ToAddress string
 	Content   []byte
 }
 
+// IsValid verifies that the Message has all of the required
+// fields filled in
 func (message MimeMessage) IsValid() (validity bool) {
 	if message.ToAddress == "" || string(message.Content) == "" {
 		return false
@@ -22,6 +25,9 @@ func (message MimeMessage) IsValid() (validity bool) {
 	return true
 }
 
+// MimeReader returns a reader from which the MIME email may be read. Mailgun
+// requires a different header and multipart message when talking to the MIME
+// endpoint.
 func (message MimeMessage) MimeReader() (b io.Reader, boundary string) {
 	buffer := new(bytes.Buffer)
 	mimeWriter := multipart.NewWriter(buffer)
@@ -41,6 +47,8 @@ func (message MimeMessage) MimeReader() (b io.Reader, boundary string) {
 	return buffer, boundary
 }
 
+// GetRequest returns a skeleton http.Request refernce with the Content-Type
+// header filled in, along with the formatting required for this type of Message
 func (message MimeMessage) GetRequest(mailgun Client) (request *http.Request) {
 	mimeReader, boundary := message.MimeReader()
 	request, _ = http.NewRequest("POST", mailgun.Endpoint(message), mimeReader)
@@ -48,6 +56,8 @@ func (message MimeMessage) GetRequest(mailgun Client) (request *http.Request) {
 	return
 }
 
+// Endpoint returns the final part of the path required for creating
+// the Mailgun URL for this type of Message
 func (message MimeMessage) Endpoint() string {
 	return "messages.mime"
 }
