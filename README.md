@@ -19,7 +19,7 @@ There are two ways to send email through Mailgun using this module.
 A Mailgun client is configured by passing in the API key and the domain
 
 ```
-	mg_client := mailgun.NewClient("key-9ic-qz3tvx1id18e3e5cf950fueirqh3", "mydomain.org.mailgun.org")
+	mg_client := mailgun.NewClient("YOUR-API-KEY-HERE", "YOUR-DOMAIN-HERE.mailgun.org")
 ```
 
 ## Sending an Email using Individual Fields

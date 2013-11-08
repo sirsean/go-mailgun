@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/jemiahlee/go-mailgun/mailgun"
+	"github.com/sirsean/go-mailgun/mailgun"
 	"io/ioutil"
 	"log"
 	"os"
