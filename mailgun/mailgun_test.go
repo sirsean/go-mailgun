@@ -74,8 +74,8 @@ func TestMimeSendWithGoodServer(t *testing.T) {
 	}
 
 	message := MimeMessage{
-		ToAddress:   "to_address@bar.org",
-		Content: mimeContent}
+		ToAddress: "to_address@bar.org",
+		Content:   mimeContent}
 
 	test_server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("to") != message.ToAddress {

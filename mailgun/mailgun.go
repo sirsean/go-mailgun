@@ -15,7 +15,7 @@ type Client struct {
 
 type MailgunMessage interface {
 	IsValid() bool
-	GetRequest(Client) (*http.Request)
+	GetRequest(Client) *http.Request
 	Endpoint() string
 }
 
