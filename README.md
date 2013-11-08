@@ -1,39 +1,62 @@
 # go-mailgun
 
-go-mailgun is a simple library that lets you send email messages via Mailgun.
+go-mailgun is a simple library that sends email messages via Mailgun.
 
-# Configuration
+# Prerequisites
 
-Before sending any emails, you'll need to set the Mailgun API endpoint and API key.
+Before sending any emails, an account on Mailgun is required, and a domain must
+be configured and an API key created.
+
+# Sending messages from Go
+
+There are two ways to send email through Mailgun using this module.
+
+1. Specify individual fields of the message
+2. create a MIME email message and send that.
+
+## Client configuration
+
+A Mailgun client is configured by passing in the API key and the domain
 
 ```
-mailgun.ApiEndpoint = "ENDPOINT"
-mailgun.ApiKey = "KEY"
+	mg_client := mailgun.NewClient("key-9ic-qz3tvx1id18e3e5cf950fueirqh3", "mydomain.org.mailgun.org")
 ```
 
-# Sending Messages
+## Sending an Email using Individual Fields
 
-When you send a message, you have to specify the sender's name and email address, the recipient's email address, the subject, and the body.
-
-It's probably a good idea to do this inside a goroutine.
+This is a simple way to send mail through the API. When sending a message,
+the sender's email address, the recipient's email address, the subject,
+and the body must all be specified.
 
 ```
-go func() {
-    mailgun.Send(mailgun.Message{
-        FromName: "Foo Bar",
-        FromAddress: "foo@bar.test",
-        ToAddress: "recipient@bar.test",
-        Subject: "This is an example message",
-        Body: "It's pretty easy to send messages via Mailgun!",
-    })
-}()
+	message := mailgun.Message{
+		FromName:    "Foo From",
+		FromAddress: "foo@fakedomaingoeshere.com",
+		ToAddress:   "bar@anotherfakedomainhere.com",
+		Subject:     "test message",
+		Body:        "This is the body of the message. It's not very interesting.",
+	}
+
+	mg_client.Send(message)
 ```
 
-go-mailgun currently doesn't support CC or BCC or attachments, or any of the other cool stuff you can do with emails. Mailgun does support all those things, so it wouldn't be hard to add those features if you want them.
+## Sending a pre-generated MIME message
+
+This part of the API will take a MIME message and send it via Mailgun's
+MIME endpoint. It does not do any validation on the MIME message passed
+in.
+
+```
+	mime_message := mailgun.MimeMessage{
+		ToAddress:   "sent_to_address@fakedomainhere.com",
+		Content: mimeContents}
+
+	mg_client.Send(message2)
+```
 
 # Example App
 
-See the example app.
+See the example app (from which most of the above code was ripped).
 
 # License
 
